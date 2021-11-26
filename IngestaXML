@@ -1,0 +1,159 @@
+#Importacion de bibliotecas
+import pandas as pd
+import xmltodict
+from os import listdir
+import glob
+from pathlib import Path
+from os import listdir
+from os.path import isfile, join
+#ruta
+path=''
+archivos=os.listdir(path)
+nombre='Archivo_'
+rango=range(len(archivos))
+
+#Iteracion sobre los archivos
+for i in archivos:
+    with open(i, "r", encoding='utf-8-sig') as abrir:
+        doc=xmltodict.parse(abrir.read())
+    
+
+        df=pd.DataFrame.from_dict(doc)
+        df2=df.iloc[1].to_dict()
+        df3=pd.DataFrame.from_dict(df2)
+        df4=df3.iloc[0].to_dict()
+        df5=pd.DataFrame(df4).T
+        df6=df5.iloc[0].to_dict()
+        df7=pd.DataFrame(df6).T
+        df7.head() #Me quedo con las columnas de nif a mun
+        df1f=df7[['NIF','RC','PROV','POL','PAR','ERR']]
+        df8=df7['LBI'].to_dict()
+        df9=pd.DataFrame(df8).T
+        df9.head()
+        df10=df9['BIE'].to_dict()
+        df11=pd.DataFrame({ key:pd.Series(value) for key, value in df10.items() }).T
+        df12=df11.to_dict()
+        df13=pd.DataFrame(df12)
+        df13.head() #dtr
+        df2f=df13[['DTR']]
+        df14=df13['DT'].to_dict()
+        df15=pd.DataFrame(df14).T
+        df15.head() #cmc,np,nm
+        df3f=df15[['CMC','NP','NM']]
+        df16=df13['IBI'].to_dict()
+        df17=pd.DataFrame(df16).T
+        df17.head() #del,mun,tip,uso,sup
+        df4f=df17[['DEL','MUN','TIP','USO','SUP']]
+        df18=df13['FIN'].to_dict()
+        df19=pd.DataFrame(df18).T
+        df19.head()#LFI,SUCF,SUPF,TIF
+        df5f=df19[['LFI','SUCF','SUPF','TIF']]
+        df20=df13['LEC'].to_dict()
+        df21=pd.DataFrame(df20).T
+        df21.head()
+        df22=df21['ELC'].to_dict()
+        df23=pd.DataFrame({ key:pd.Series(value) for key, value in df22.items() }).T
+        df23.head()#ESC,PLA,PUE,SEC,UEC
+        df6f=df23[['ESC','PLA','PUE','SEC','UEC']]
+        df24=df15['LOINE'].to_dict()
+        df25=pd.DataFrame(df24).T
+        df25.head()#CP,CM
+        df7f=df25[['CP','CM']]
+        df26=df15['LOCS'].to_dict()
+        df27=pd.DataFrame(df26).T
+        df28=df27['LOUS'].to_dict()
+        df29=pd.DataFrame(df28).T
+        df30=df29['LOURB'].to_dict()
+        df31=pd.DataFrame(df30).T
+        df31.head()#DP,DM
+        df8f=df31[['DP','DM']]
+        df32=df31['DIR'].to_dict()
+        df33=pd.DataFrame(df32).T
+        df33.head()#cv,tv,nv,pnp,snp
+        df9f=df33[['CV','TV','NV','PNP','SNP']]
+        df34=df31['LOINT'].to_dict()
+        df35=pd.DataFrame(df34).T
+        df35.head()#es,pt,pu,bq
+        df10f=df35[['ES','PT','PU','BQ']]
+        df36=df17['RCA'].to_dict()
+        df37=pd.DataFrame(df36).T
+        df37.head()#PCA,CAR,CDC1,CDC2
+        df11f=df37[['PCA','CAR','CDC1','CDC2']]
+        #UNIONES
+        Data=df1f.join(df2f,how='outer')
+        Data2=Data.join(df3f,how='outer')
+        Data3 = pd.merge(Data2.reset_index(),
+                          df4f.reset_index(), 
+                          left_index=True, 
+                          right_index=True)
+        Data3=Data3[['NIF','RC','PROV','POL','PAR','ERR','DTR','CMC','NP','NM','DEL','MUN','TIP','USO','SUP']]
+        Data4=Data3.join(df5f,how='outer')
+        Data5=Data4.join(df6f,how='outer').join(df7f,how='outer').join(df8f,how='outer').join(df9f,how='outer').join(df10f,how='outer').join(df11f,how='outer')
+        #Data5 es Data final primer hilo
+        #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SEGUNDO HILO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        dfver=df11[0].to_dict()
+        dfver2=pd.DataFrame(dfver).T
+        dfver2.head()#Nos quedamos con DTR, CPA
+        df12f=dfver2[['DTR','CPA']]
+        dfver3=dfver2['IBI'].to_dict()
+        dfver4=pd.DataFrame(dfver3).T
+        dfver4.head() #Nos quedamos con DEL,MUN,TIP,USO,SUP
+        df13f=dfver4[['DEL','MUN','TIP','USO','SUP']]
+        dfver5=dfver4['RCA'].to_dict()
+        dfver6=pd.DataFrame(dfver5).T
+        dfver6.head()#Nos quedamos con PCA,CAR,CDC1,CDC2
+        df14f=dfver6[['PCA','CAR','CDC1','CDC2']]
+
+        dfver7=dfver2['DT'].to_dict()
+        dfver8=pd.DataFrame(dfver7).T
+        dfver8.head()#Nos quedamos con CMC,NP,NM
+        df15f=dfver8[['CMC','NP','NM']]
+        dfver9=dfver8['LOINE'].to_dict()
+        dfver10=pd.DataFrame(dfver9).T
+        dfver10.head()#Nos quedamos con CP,CM
+        df16f=dfver10[['CP','CM']]
+        dfver11=dfver8['LOCS'].to_dict()
+        dfver12=pd.DataFrame(dfver11).T
+        dfver12.head()#-->
+        dfver13=dfver12['LOUS'].to_dict()
+        dfver14=pd.DataFrame(dfver13).T
+        dfver14.head()#-->
+        dfver15=dfver14['LOURB'].to_dict()
+        dfver16=pd.DataFrame(dfver15).T
+        dfver16.head()#Nos quedamos con DP,DM -->
+        df17f=dfver16[['DP','DM']]
+        dfver17=dfver16['DIR'].to_dict()
+        dfver18=pd.DataFrame(dfver17).T
+        dfver18.head()#Nos quedamos con cv,tv,nv,pnp
+        df18f=dfver18[['CV','TV','NV','PNP']]
+        dfver19=dfver16['LOINT'].to_dict()
+        dfver20=pd.DataFrame(dfver19).T
+        dfver20.head()#Nos quedamos con es,pt,pu,bq
+        df19f=dfver20[['ES','PT','PU','BQ']]
+
+        dfver21=dfver2['FIN'].to_dict()
+        dfver22=pd.DataFrame(dfver21).T
+        dfver22.head() #Nos quedamos con lfi,sucf,supf,tif
+        df20f=dfver22[['LFI','SUCF','SUPF','TIF']]
+
+
+        dfver23=dfver2['LEC'].to_dict()
+        dfver24=pd.DataFrame(dfver23).T
+        dfver24.head() #-->
+        dfver25=dfver24['ELC'].to_dict()
+        dfver26=pd.DataFrame({ key:pd.Series(value) for key, value in df22.items() }).T
+        dfver26.head() #Nos quedamos con PLA,PUE,SEC,UEC
+        df21f=dfver26[['PLA','PUE','SEC','UEC']]
+        #UNIONES
+        Data6=df12f.join(df13f,how='outer').join(df14f,how='outer').join(df15f,how='outer').join(df16f,how='outer').join(df17f,how='outer').join(df18f,how='outer').join(df19f,how='outer').join(df20f,how='outer').join(df21f,how='outer')
+        #Data 6 es data final 2º hilo
+        #Sustituimos los valores faltantes del hilo1 col el hilo2
+        DataFinal=Data5.fillna(Data6)
+    
+       #Carga de CSV
+        lista=[]
+        for i in rango:
+            if i not in lista:
+                DataFinal.to_csv(nombre + str(i) + '.csv')
+                lista.append(i)
+            else: print('ERROR EL ARCHIVO YA SE HA LEIDO')
