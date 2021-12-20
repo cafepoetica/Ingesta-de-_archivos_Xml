@@ -1,0 +1,101 @@
+#Importamos las librerias
+from xml.etree.ElementTree import parse
+import pandas as pd
+import glob
+from pathlib import Path
+from os import listdir
+from os.path import isfile, join
+import os
+
+#Cargamos los documentos
+#ruta
+path=''
+archivos=os.listdir(path)
+nombre='Archivo_'
+rango=range(len(archivos))
+
+for i in archivos:
+    document=parse(i)
+    root=document.getroot()
+    
+    #---------PARA ABRIR UN SOLO XML----------
+    #document = parse('SCLTI210123050301.xml')
+            #Iteramos sobre el arbol
+    #root = document.getroot()
+    #-----------------------------------------
+    
+    # listas de datos
+
+    #columns=[]
+    #RC=[]
+    #DTR=[]
+    #USO=[]
+    #NP=[]
+    #TIF=[]
+    #ESC=[]
+    #PLA=[]
+    #PUE=[]
+    #SEC=[]
+    dfcol=[]
+    dftx=[]
+    
+
+
+    #Bucles para recorer los datos que nos interesan
+
+    for child in root:
+        for a in child:
+            for e in a:
+                for i in e:
+                    for o in i:
+                        for t in o:#info
+                            for h in t:
+                                dfcol.append(h.tag)
+                                dftx.append(h.text)
+
+    #Creamos un dataframe de 2 columnas con los datos
+    df=pd.DataFrame(dftx)
+    df1=pd.DataFrame(dfcol)
+    df_inner = df1.merge(df, how='inner', left_index=True, right_index=True)
+    df_inner.rename(columns={'0_y':'Datos','0_x':'Tipo'},inplace=True)                            
+
+    lista = []
+    d = {}
+    for index, fila in df_inner.iterrows():
+      if fila.Tipo == "PCA":    # Un nuevo codigo de catastro
+        if d:                     # Si d no está vacío se añade a la lista (cliente anterior)
+          lista.append(d)
+        d = {"PCA": fila.Datos} # y se crea un nuevo d para el nuevo codigo
+      else:                       # Añadir campo correspondiente al codigo en construcción
+        campo = f"{fila.Tipo}1"     # El nombre del campo se toma de la fila
+        c = 2
+        while campo in d:         # Y se ajusta por si ese campo ya existiera
+          campo = f"{fila.Tipo}{c}"
+          c+=1
+        d[campo] = fila.Datos      # El valor del campo se toma de la fila
+
+    lista.append(d)               # Añadir el último codigo
+    resultado = pd.DataFrame(lista)
+
+    #Exportacion a CSV
+    
+    listaf=[]
+    for i in rango:
+        if i not in lista:
+            resultado.to_csv(nombre + str(i) + '.csv')
+            listaf.append(i)
+        else: print('ERROR EL ARCHIVO YA SE HA LEIDO')
+                
+                
+print('<<<<<<<<<<>>>>>>>>>> Lectura correcta <<<<<<<<<<>>>>>>>>>>')
+
+#UNION DE LOS CSV EN UNA UNICA BBDD
+
+os.chdir("C:")
+extension = 'csv'
+
+all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
+#combinar todos los archivos de la lista
+BBDD = pd.concat([pd.read_csv(f) for f in all_filenames ])
+#exportar el csv final
+BBDD.to_csv( "BBDD_FINAL.csv", index=False, encoding='utf8')
